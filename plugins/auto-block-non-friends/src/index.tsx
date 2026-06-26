@@ -110,4 +110,4 @@ function settings() {
   );
 }
 
-export default { onLoad, onUnload, settings };
+module.exports = { onLoad, onUnload, settings };
