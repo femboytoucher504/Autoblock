@@ -6,14 +6,17 @@ import { showToast } from "@vendetta/ui/toasts";
 
 const { FormSection, FormRadioRow, FormSwitchRow, FormDivider } = Forms;
 
+// Revenge / Güncel Discord uyumlu modül eşleşmeleri
 const RelationshipStore = findByProps("getRelationshipType", "isBlocked");
 const RelationshipActions = findByProps("addRelationship", "removeRelationship") ?? {};
-const IgnoreActions =
-  findByProps("ignoreUser", "unignoreUser") ??
-  findByProps("ignoreRelationship", "unignoreRelationship") ??
-  RelationshipActions;
 const UserStore = findByProps("getCurrentUser");
-const RelationshipTypes = { FRIEND: 1, BLOCKED: 2 };
+
+// Güncel Discord Relationship tipleri
+const RelationshipTypes = { 
+  FRIEND: 1, 
+  BLOCKED: 2,
+  IGNORED: 5 
+};
 
 storage.action ??= "block";
 storage.onDM ??= true;
@@ -24,7 +27,12 @@ function isFriend(userId) {
 }
 
 function alreadyHandled(userId) {
-  return Boolean(RelationshipStore?.isBlocked?.(userId) || RelationshipStore?.isIgnored?.(userId));
+  if (!RelationshipStore) return false;
+  const type = RelationshipStore.getRelationshipType?.(userId);
+  const isBlocked = RelationshipStore.isBlocked?.(userId);
+  
+  // Eğer zaten engelliyse veya ilişkisi BLOCKED/IGNORED ise true dön
+  return Boolean(isBlocked || type === RelationshipTypes.BLOCKED || type === RelationshipTypes.IGNORED);
 }
 
 function blockUser(userId) {
@@ -32,7 +40,8 @@ function blockUser(userId) {
 }
 
 function ignoreUser(userId) {
-  IgnoreActions?.ignoreUser?.(userId) ?? IgnoreActions?.ignoreRelationship?.(userId);
+  // Güncel Discord'da ignore işlemi artık bir ilişki tipidir
+  RelationshipActions?.addRelationship?.(userId, { type: RelationshipTypes.IGNORED });
 }
 
 function handleMessage(message) {
@@ -74,7 +83,7 @@ function onUnload() {
   FluxDispatcher.unsubscribe("MESSAGE_CREATE", onMessageCreate);
 }
 
-function settings() {
+function Settings() {
   const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
   const update = (mutator) => {
     mutator();
@@ -85,13 +94,13 @@ function settings() {
     <FormSection title="Action for non-friends">
       <FormRadioRow
         label="Block"
-        subLabel="Full Discord block — they can't message or add you, and they can tell."
+        subLabel="Full Discord block — they can't message or add you."
         selected={storage.action === "block"}
         onPress={() => update(() => (storage.action = "block"))}
       />
       <FormRadioRow
         label="Ignore"
-        subLabel="Discord's native Ignore — hides their messages/notifications from you, they can't tell."
+        subLabel="Discord's native Ignore — hides their messages/notifications."
         selected={storage.action === "ignore"}
         onPress={() => update(() => (storage.action = "ignore"))}
       />
@@ -110,4 +119,9 @@ function settings() {
   );
 }
 
-module.exports = { onLoad, onUnload, settings };
+export default {
+  onLoad,
+  onUnload,
+  settings: Settings,
+};
+                                     
