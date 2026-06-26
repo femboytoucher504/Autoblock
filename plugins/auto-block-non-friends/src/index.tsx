@@ -66,15 +66,15 @@ function onMessageCreate(event) {
   }
 }
 
-export function onLoad() {
+function onLoad() {
   FluxDispatcher.subscribe("MESSAGE_CREATE", onMessageCreate);
 }
 
-export function onUnload() {
+function onUnload() {
   FluxDispatcher.unsubscribe("MESSAGE_CREATE", onMessageCreate);
 }
 
-export function settings() {
+function settings() {
   const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
   const update = (mutator) => {
     mutator();
@@ -109,3 +109,5 @@ export function settings() {
     </FormSection>
   );
 }
+
+export default { onLoad, onUnload, settings };
