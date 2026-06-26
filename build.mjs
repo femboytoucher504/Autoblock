@@ -1,6 +1,7 @@
 import { build } from "esbuild";
-import { readdirSync, mkdirSync, copyFileSync, existsSync } from "fs";
+import { readdirSync, mkdirSync, readFileSync, writeFileSync, existsSync } from "fs";
 import { join } from "path";
+import { createHash } from "crypto";
 
 const pluginsDir = "plugins";
 const outDir = "dist";
@@ -20,13 +21,21 @@ for (const name of readdirSync(pluginsDir)) {
     entryPoints: [entry],
     bundle: true,
     outfile: join(outPath, "index.js"),
-    format: "esm",
+    format: "cjs",
     target: "esnext",
     jsx: "automatic",
     external: externals,
     minify: true,
   });
 
-  copyFileSync(manifestSrc, join(outPath, "manifest.json"));
-  console.log(`Built ${name} -> ${outPath}`);
+  const jsContent = readFileSync(join(outPath, "index.js"));
+  const hash = createHash("sha256").update(jsContent).digest("hex");
+
+  const manifest = JSON.parse(readFileSync(manifestSrc, "utf8"));
+  manifest.id ??= name;
+  manifest.version ??= "1.0.0";
+  manifest.hash = hash;
+
+  writeFileSync(join(outPath, "manifest.json"), JSON.stringify(manifest, null, 2));
+  console.log(`Built ${name} -> ${outPath} (hash ${hash.slice(0, 12)}...)`);
 }

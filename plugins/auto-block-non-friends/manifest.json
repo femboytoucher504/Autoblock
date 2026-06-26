@@ -1,5 +1,7 @@
 {
+  "id": "auto-block-non-friends",
   "name": "AutoBlock Non-Friends",
+  "version": "1.0.0",
   "description": "Auto-blocks or ignores anyone who DMs or @mentions you without being a friend.",
   "authors": [{ "name": "you" }],
   "main": "index.js"
