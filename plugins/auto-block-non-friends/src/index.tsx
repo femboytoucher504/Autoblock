@@ -6,16 +6,14 @@ import { showToast } from "@vendetta/ui/toasts";
 
 const { FormSection, FormRadioRow, FormSwitchRow, FormDivider } = Forms;
 
-// Revenge / Güncel Discord uyumlu modül eşleşmeleri
 const RelationshipStore = findByProps("getRelationshipType", "isBlocked");
 const RelationshipActions = findByProps("addRelationship", "removeRelationship") ?? {};
 const UserStore = findByProps("getCurrentUser");
 
-// Güncel Discord Relationship tipleri
-const RelationshipTypes = { 
-  FRIEND: 1, 
+const RelationshipTypes = {
+  FRIEND: 1,
   BLOCKED: 2,
-  IGNORED: 5 
+  IGNORED: 5,
 };
 
 storage.action ??= "block";
@@ -30,8 +28,6 @@ function alreadyHandled(userId) {
   if (!RelationshipStore) return false;
   const type = RelationshipStore.getRelationshipType?.(userId);
   const isBlocked = RelationshipStore.isBlocked?.(userId);
-  
-  // Eğer zaten engelliyse veya ilişkisi BLOCKED/IGNORED ise true dön
   return Boolean(isBlocked || type === RelationshipTypes.BLOCKED || type === RelationshipTypes.IGNORED);
 }
 
@@ -40,7 +36,6 @@ function blockUser(userId) {
 }
 
 function ignoreUser(userId) {
-  // Güncel Discord'da ignore işlemi artık bir ilişki tipidir
   RelationshipActions?.addRelationship?.(userId, { type: RelationshipTypes.IGNORED });
 }
 
@@ -119,9 +114,8 @@ function Settings() {
   );
 }
 
-export default {
+module.exports = {
   onLoad,
   onUnload,
   settings: Settings,
 };
-                                     
