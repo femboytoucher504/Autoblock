@@ -1,7 +1,7 @@
-import { storage } from "@vendetta/plugin";
-import { findByProps } from "@vendetta/metro";
-import { FluxDispatcher, React } from "@vendetta/metro/common";
-import { showToast } from "@vendetta/ui/toasts";
+const { storage } = vendetta.plugin;
+const { findByProps } = vendetta.metro;
+const { FluxDispatcher, React } = vendetta.metro.common;
+const { showToast } = vendetta.ui.toasts;
 
 showToast("AutoBlockNonFriends file loaded!");
 
@@ -9,11 +9,7 @@ const RelationshipStore = findByProps("getRelationshipType", "isBlocked");
 const RelationshipActions = findByProps("addRelationship", "removeRelationship") ?? {};
 const UserStore = findByProps("getCurrentUser");
 
-const RelationshipTypes = {
-  FRIEND: 1,
-  BLOCKED: 2,
-  IGNORED: 5,
-};
+const RelationshipTypes = { FRIEND: 1, BLOCKED: 2, IGNORED: 5 };
 
 storage.action ??= "block";
 storage.onDM ??= true;
@@ -46,8 +42,7 @@ function handleMessage(message) {
   if (isFriend(authorId) || alreadyHandled(authorId)) return;
 
   const isDM = !message.guild_id;
-  const isMention =
-    Array.isArray(message.mentions) && message.mentions.some((m) => m.id === me.id);
+  const isMention = Array.isArray(message.mentions) && message.mentions.some((m) => m.id === me.id);
 
   const shouldAct = (isDM && storage.onDM) || (isMention && storage.onMention);
   if (!shouldAct) return;
@@ -79,7 +74,7 @@ function onUnload() {
 
 function Settings() {
   try {
-    const { Forms } = require("@vendetta/ui/components");
+    const { Forms } = vendetta.ui.components;
     const { FormSection, FormRadioRow, FormSwitchRow, FormDivider } = Forms ?? {};
     const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
     const update = (mutator) => {
@@ -115,13 +110,9 @@ function Settings() {
       })
     );
   } catch (e) {
-    showToast("Settings UI error: " + e.message);
+    vendetta.ui.toasts.showToast("Settings UI error: " + e.message);
     return null;
   }
 }
 
-module.exports = {
-  onLoad,
-  onUnload,
-  settings: Settings,
-};
+module.exports = { onLoad, onUnload, settings: Settings };
