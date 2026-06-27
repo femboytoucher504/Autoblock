@@ -1,17 +1,22 @@
-(function (u, plugin, metro, common, toasts, components) {
+(function (u, plugin, metro, common, toasts) {
   "use strict";
   const { storage } = plugin;
   const { findByProps } = metro;
   const { FluxDispatcher, React } = common;
   const { showToast } = toasts;
 
-  // Modüllerin yüklenip yüklenmediğini teyit etmek için
-  showToast("AutoBlockNonFriends yüklendi!");
+  showToast("AutoBlockNonFriends aktif!");
 
   const RelationshipStore = findByProps("getRelationshipType", "isBlocked");
   const RelationshipActions = findByProps("addRelationship", "removeRelationship") ?? {};
   const UserStore = findByProps("getCurrentUser");
   const RelationshipTypes = { FRIEND: 1, BLOCKED: 2, IGNORED: 5 };
+
+  // Güvenli UI Modülü Arama (Çökmeyi önleyen kısım)
+  const FormSection = findByProps("FormSection")?.FormSection ?? findByProps("FormSection");
+  const FormRadioRow = findByProps("FormRadioRow")?.FormRadioRow ?? findByProps("FormRadioRow");
+  const FormSwitchRow = findByProps("FormSwitchRow")?.FormSwitchRow ?? findByProps("FormSwitchRow");
+  const FormDivider = findByProps("FormDivider")?.FormDivider ?? findByProps("FormDivider");
 
   storage.action ??= "block";
   storage.onDM ??= true;
@@ -59,12 +64,16 @@
   function onUnload() {
     FluxDispatcher.unsubscribe("MESSAGE_CREATE", onMessageCreate);
   }
+
   function Settings() {
     try {
-      // Revenge/Vendetta'da Form bileşenleri direkt components altındadır
-      const { FormSection, FormRadioRow, FormSwitchRow, FormDivider } = components ?? {};
       const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
       const update = (mutator) => { mutator(); forceUpdate(); };
+
+      // Eğer modüllerden biri bile bulunamadıysa düz yazı olarak render et (Çökme koruması)
+      if (!FormSection || !FormRadioRow || !FormSwitchRow) {
+        return React.createElement(common.components.Text ?? "Text", {}, "Ayarlar yüklenemedi: UYUMSUZ_REVENGE_VERSION");
+      }
       
       return React.createElement(
         FormSection,
@@ -81,7 +90,7 @@
           selected: storage.action === "ignore",
           onPress: () => update(() => (storage.action = "ignore")),
         }),
-        React.createElement(FormDivider, {}),
+        FormDivider ? React.createElement(FormDivider, {}) : null,
         React.createElement(FormSwitchRow, {
           label: "Trigger on direct messages",
           value: storage.onDM,
@@ -94,12 +103,12 @@
         })
       );
     } catch (e) {
-      toasts.showToast("Settings UI error: " + e.message);
-      return null;
+      return React.createElement(common.components.Text ?? "Text", {}, "Hata: " + e.message);
     }
   }
 
   u.default = { onLoad, onUnload, settings: Settings };
   Object.defineProperty(u, "__esModule", { value: true });
   return u;
-})({}, vendetta.plugin, vendetta.metro, vendetta.metro.common, vendetta.ui.toasts, vendetta.ui.components);
+})({}, vendetta.plugin, vendetta.metro, vendetta.metro.common, vendetta.ui.toasts);
+ 
