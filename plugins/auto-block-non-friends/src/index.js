@@ -10,13 +10,9 @@
   const RelationshipStore = findByProps("getRelationshipType", "isBlocked");
   const RelationshipActions = findByProps("addRelationship", "removeRelationship") ?? {};
   const UserStore = findByProps("getCurrentUser");
+  
+  // Güncel Discord İlişki Tipleri
   const RelationshipTypes = { FRIEND: 1, BLOCKED: 2, IGNORED: 5 };
-
-  // Güvenli UI Modülü Arama (Çökmeyi önleyen kısım)
-  const FormSection = findByProps("FormSection")?.FormSection ?? findByProps("FormSection");
-  const FormRadioRow = findByProps("FormRadioRow")?.FormRadioRow ?? findByProps("FormRadioRow");
-  const FormSwitchRow = findByProps("FormSwitchRow")?.FormSwitchRow ?? findByProps("FormSwitchRow");
-  const FormDivider = findByProps("FormDivider")?.FormDivider ?? findByProps("FormDivider");
 
   storage.action ??= "block";
   storage.onDM ??= true;
@@ -25,52 +21,81 @@
   function isFriend(userId) {
     return RelationshipStore?.getRelationshipType?.(userId) === RelationshipTypes.FRIEND;
   }
+  
   function alreadyHandled(userId) {
     if (!RelationshipStore) return false;
     const type = RelationshipStore.getRelationshipType?.(userId);
     const isBlocked = RelationshipStore.isBlocked?.(userId);
     return Boolean(isBlocked || type === RelationshipTypes.BLOCKED || type === RelationshipTypes.IGNORED);
   }
-  function blockUser(userId) {
-    RelationshipActions?.addRelationship?.(userId, { type: RelationshipTypes.BLOCKED });
+
+  // UYARIYI ENGELLEYEN KRİTİK DÜZELTME BÖLÜMÜ
+  function blockUser(userId, username) {
+    if (!RelationshipActions?.addRelationship) return;
+    // Güncel API hem içerik tipini hem de context'i tam nesne olarak bekler
+    RelationshipActions.addRelationship(userId, { 
+      type: RelationshipTypes.BLOCKED 
+    }, { 
+      location: "Context Menu" 
+    });
+    showToast(`Engellendi: ${username ?? "Kullanıcı"}`);
   }
-  function ignoreUser(userId) {
-    RelationshipActions?.addRelationship?.(userId, { type: RelationshipTypes.IGNORED });
+
+  function ignoreUser(userId, username) {
+    if (!RelationshipActions?.addRelationship) return;
+    RelationshipActions.addRelationship(userId, { 
+      type: RelationshipTypes.IGNORED 
+    }, { 
+      location: "Context Menu" 
+    });
+    showToast(`Yoksayıldı: ${username ?? "Kullanıcı"}`);
   }
+
   function handleMessage(message) {
     const me = UserStore?.getCurrentUser?.();
     if (!me || !message?.author || message.author.id === me.id) return;
+    
     const authorId = message.author.id;
     if (isFriend(authorId) || alreadyHandled(authorId)) return;
+    
     const isDM = !message.guild_id;
     const isMention = Array.isArray(message.mentions) && message.mentions.some((m) => m.id === me.id);
+    
     const shouldAct = (isDM && storage.onDM) || (isMention && storage.onMention);
     if (!shouldAct) return;
+
+    const targetUsername = message.author.username;
+
     if (storage.action === "block") {
-      blockUser(authorId);
-      showToast(`Engellendi: ${message.author.username ?? "user"}`);
+      blockUser(authorId, targetUsername);
     } else {
-      ignoreUser(authorId);
-      showToast(`Yoksayıldı: ${message.author.username ?? "user"}`);
+      ignoreUser(authorId, targetUsername);
     }
   }
+
   function onMessageCreate(event) {
     try { handleMessage(event?.message); }
     catch (e) { console.error("[AutoBlockNonFriends]", e); }
   }
+  
   function onLoad() {
     FluxDispatcher.subscribe("MESSAGE_CREATE", onMessageCreate);
   }
+  
   function onUnload() {
     FluxDispatcher.unsubscribe("MESSAGE_CREATE", onMessageCreate);
   }
 
   function Settings() {
     try {
+      const FormSection = findByProps("FormSection")?.FormSection ?? findByProps("FormSection");
+      const FormRadioRow = findByProps("FormRadioRow")?.FormRadioRow ?? findByProps("FormRadioRow");
+      const FormSwitchRow = findByProps("FormSwitchRow")?.FormSwitchRow ?? findByProps("FormSwitchRow");
+      const FormDivider = findByProps("FormDivider")?.FormDivider ?? findByProps("FormDivider");
+
       const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
       const update = (mutator) => { mutator(); forceUpdate(); };
 
-      // Eğer modüllerden biri bile bulunamadıysa düz yazı olarak render et (Çökme koruması)
       if (!FormSection || !FormRadioRow || !FormSwitchRow) {
         return React.createElement(common.components.Text ?? "Text", {}, "Ayarlar yüklenemedi: UYUMSUZ_REVENGE_VERSION");
       }
@@ -111,4 +136,3 @@
   Object.defineProperty(u, "__esModule", { value: true });
   return u;
 })({}, vendetta.plugin, vendetta.metro, vendetta.metro.common, vendetta.ui.toasts);
- 
