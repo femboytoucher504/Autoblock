@@ -1,10 +1,7 @@
 import { storage } from "@vendetta/plugin";
 import { findByProps } from "@vendetta/metro";
 import { FluxDispatcher, React } from "@vendetta/metro/common";
-import { Forms } from "@vendetta/ui/components";
 import { showToast } from "@vendetta/ui/toasts";
-
-const { FormSection, FormRadioRow, FormSwitchRow, FormDivider } = Forms;
 
 showToast("AutoBlockNonFriends file loaded!");
 
@@ -81,39 +78,46 @@ function onUnload() {
 }
 
 function Settings() {
-  const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
-  const update = (mutator) => {
-    mutator();
-    forceUpdate();
-  };
+  try {
+    const { Forms } = require("@vendetta/ui/components");
+    const { FormSection, FormRadioRow, FormSwitchRow, FormDivider } = Forms ?? {};
+    const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
+    const update = (mutator) => {
+      mutator();
+      forceUpdate();
+    };
 
-  return React.createElement(
-    FormSection,
-    { title: "Action for non-friends" },
-    React.createElement(FormRadioRow, {
-      label: "Block",
-      subLabel: "Full Discord block — they can't message or add you.",
-      selected: storage.action === "block",
-      onPress: () => update(() => (storage.action = "block")),
-    }),
-    React.createElement(FormRadioRow, {
-      label: "Ignore",
-      subLabel: "Discord's native Ignore — hides their messages/notifications.",
-      selected: storage.action === "ignore",
-      onPress: () => update(() => (storage.action = "ignore")),
-    }),
-    React.createElement(FormDivider, {}),
-    React.createElement(FormSwitchRow, {
-      label: "Trigger on direct messages",
-      value: storage.onDM,
-      onValueChange: (v) => update(() => (storage.onDM = v)),
-    }),
-    React.createElement(FormSwitchRow, {
-      label: "Trigger on @mentions in servers",
-      value: storage.onMention,
-      onValueChange: (v) => update(() => (storage.onMention = v)),
-    })
-  );
+    return React.createElement(
+      FormSection,
+      { title: "Action for non-friends" },
+      React.createElement(FormRadioRow, {
+        label: "Block",
+        subLabel: "Full Discord block — they can't message or add you.",
+        selected: storage.action === "block",
+        onPress: () => update(() => (storage.action = "block")),
+      }),
+      React.createElement(FormRadioRow, {
+        label: "Ignore",
+        subLabel: "Discord's native Ignore — hides their messages/notifications.",
+        selected: storage.action === "ignore",
+        onPress: () => update(() => (storage.action = "ignore")),
+      }),
+      React.createElement(FormDivider, {}),
+      React.createElement(FormSwitchRow, {
+        label: "Trigger on direct messages",
+        value: storage.onDM,
+        onValueChange: (v) => update(() => (storage.onDM = v)),
+      }),
+      React.createElement(FormSwitchRow, {
+        label: "Trigger on @mentions in servers",
+        value: storage.onMention,
+        onValueChange: (v) => update(() => (storage.onMention = v)),
+      })
+    );
+  } catch (e) {
+    showToast("Settings UI error: " + e.message);
+    return null;
+  }
 }
 
 module.exports = {
