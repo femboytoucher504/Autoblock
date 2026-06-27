@@ -87,32 +87,32 @@ function Settings() {
     forceUpdate();
   };
 
-  return (
-    <FormSection title="Action for non-friends">
-      <FormRadioRow
-        label="Block"
-        subLabel="Full Discord block — they can't message or add you."
-        selected={storage.action === "block"}
-        onPress={() => update(() => (storage.action = "block"))}
-      />
-      <FormRadioRow
-        label="Ignore"
-        subLabel="Discord's native Ignore — hides their messages/notifications."
-        selected={storage.action === "ignore"}
-        onPress={() => update(() => (storage.action = "ignore"))}
-      />
-      <FormDivider />
-      <FormSwitchRow
-        label="Trigger on direct messages"
-        value={storage.onDM}
-        onValueChange={(v) => update(() => (storage.onDM = v))}
-      />
-      <FormSwitchRow
-        label="Trigger on @mentions in servers"
-        value={storage.onMention}
-        onValueChange={(v) => update(() => (storage.onMention = v))}
-      />
-    </FormSection>
+  return React.createElement(
+    FormSection,
+    { title: "Action for non-friends" },
+    React.createElement(FormRadioRow, {
+      label: "Block",
+      subLabel: "Full Discord block — they can't message or add you.",
+      selected: storage.action === "block",
+      onPress: () => update(() => (storage.action = "block")),
+    }),
+    React.createElement(FormRadioRow, {
+      label: "Ignore",
+      subLabel: "Discord's native Ignore — hides their messages/notifications.",
+      selected: storage.action === "ignore",
+      onPress: () => update(() => (storage.action = "ignore")),
+    }),
+    React.createElement(FormDivider, {}),
+    React.createElement(FormSwitchRow, {
+      label: "Trigger on direct messages",
+      value: storage.onDM,
+      onValueChange: (v) => update(() => (storage.onDM = v)),
+    }),
+    React.createElement(FormSwitchRow, {
+      label: "Trigger on @mentions in servers",
+      value: storage.onMention,
+      onValueChange: (v) => update(() => (storage.onMention = v)),
+    })
   );
 }
 
