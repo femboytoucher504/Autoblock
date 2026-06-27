@@ -6,6 +6,8 @@ import { showToast } from "@vendetta/ui/toasts";
 
 const { FormSection, FormRadioRow, FormSwitchRow, FormDivider } = Forms;
 
+showToast("AutoBlockNonFriends file loaded!");
+
 const RelationshipStore = findByProps("getRelationshipType", "isBlocked");
 const RelationshipActions = findByProps("addRelationship", "removeRelationship") ?? {};
 const UserStore = findByProps("getCurrentUser");
